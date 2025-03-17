@@ -1,0 +1,18 @@
+{
+  "name": "servicenow-poc",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.8",
+    "hono": "^4.7.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.24",
+    "tsx": "^4.7.1",
+    "typescript": "^5.8.2"
+  }
+}
