@@ -95,7 +95,7 @@ app.post(
             }),
         ]);
 
-      return c.json({
+      const response = {
         appName: serviceNowApp.name,
         shortName: serviceNowApp.number,
         description: serviceNowApp.short_description,
@@ -103,8 +103,10 @@ app.post(
         cloudModel: serviceNowApp.u_cloud_model,
         owner: ownerRecordId,
         l3: l3RecordId,
-        regulatory: regulatoryRecordIds,
-      });
+        regulatory: regulatoryRecordIds.join("|"),
+      };
+
+      return c.json(response);
     } catch (error) {
       if (error instanceof Error) {
         throw new HTTPException(500, {
