@@ -102,31 +102,17 @@ app.post(
         ]);
 
       if (ownerRecordId === 0) {
-        ownerRecordId = await onspring.saveRecord({
-          appId: body.onspringUserAppId,
-          fields: {
-            [body.onspringUserFirstNameFieldId]: serviceNowOwner.name.split(" ")[0],
-            [body.onspringUserLastNameFieldId]: serviceNowOwner.name.split(" ")[1],
-            [body.onspringUserUsernameFieldId]: serviceNowOwner.name.replace(" ", ".").toLowerCase(),
-            [body.onspringUserEmailFieldId]: serviceNowOwner.name.replace(" ", ".").toLowerCase() + "@example.com",
-            [body.onspringUserStatusFieldId]: "0fe6b5fb-7351-46e7-a833-5813f280f710",
-            [body.onspringUserTierFieldId]: "19a961c2-661b-4132-91e5-623120ad59a8",
-          },
-        });
+        ownerRecordId = await onspring.saveRecord(
+          newUserRecord({
+            userName: serviceNowOwner.name,
+          }),
+        );
       }
 
       if (l3RecordId === 0) {
-        l3RecordId = await onspring.saveRecord({
-          appId: body.onspringUserAppId,
-          fields: {
-            [body.onspringUserFirstNameFieldId]: serviceNowL3.name.split(" ")[0],
-            [body.onspringUserLastNameFieldId]: serviceNowL3.name.split(" ")[1],
-            [body.onspringUserUsernameFieldId]: serviceNowL3.name.replace(" ", ".").toLowerCase(),
-            [body.onspringUserEmailFieldId]: serviceNowL3.name.replace(" ", ".").toLowerCase() + "@example.com",
-            [body.onspringUserStatusFieldId]: "0fe6b5fb-7351-46e7-a833-5813f280f710",
-            [body.onspringUserTierFieldId]: "19a961c2-661b-4132-91e5-623120ad59a8",
-          },
-        });
+        l3RecordId = await onspring.saveRecord(
+          newUserRecord({ userName: serviceNowL3.name }),
+        );
       }
 
       const response = {
@@ -141,6 +127,25 @@ app.post(
       };
 
       return c.json(response);
+
+      function newUserRecord({ userName }: { userName: string }) {
+        return {
+          appId: body.onspringUserAppId,
+          fields: {
+            [body.onspringUserFirstNameFieldId]: userName.split(" ")[0],
+            [body.onspringUserLastNameFieldId]: userName.split(" ")[1],
+            [body.onspringUserUsernameFieldId]: userName
+              .replace(" ", ".")
+              .toLowerCase(),
+            [body.onspringUserEmailFieldId]:
+              userName.replace(" ", ".").toLowerCase() + "@example.com",
+            [body.onspringUserStatusFieldId]:
+              "0fe6b5fb-7351-46e7-a833-5813f280f710",
+            [body.onspringUserTierFieldId]:
+              "19a961c2-661b-4132-91e5-623120ad59a8",
+          },
+        };
+      }
     } catch (error) {
       if (error instanceof Error) {
         throw new HTTPException(500, {
