@@ -29,7 +29,13 @@ const syncRequestSchema = z.object({
   serviceNowBaseUrl: z.string().min(1).url(),
   appName: z.string().min(1),
   onspringUserAppId: z.number().min(1),
+  onspringUserFirstNameFieldId: z.number().min(1),
+  onspringUserLastNameFieldId: z.number().min(1),
+  onspringUserUsernameFieldId: z.number().min(1),
+  onspringUserEmailFieldId: z.number().min(1),
   onspringUserFullNameFieldId: z.number().min(1),
+  onspringUserStatusFieldId: z.number().min(1),
+  onspringUserTierFieldId: z.number().min(1),
   onspringRegTypeAppId: z.number().min(1),
   onspringRegTypeIdFieldId: z.number().min(1),
 });
@@ -72,7 +78,7 @@ app.post(
         serviceNow.getUserByLink(serviceNowApp.u_l3_name.link),
       ]);
 
-      const [ownerRecordId, l3RecordId, ...regulatoryRecordIds] =
+      let [ownerRecordId, l3RecordId, ...regulatoryRecordIds] =
         await Promise.all([
           onspring.getRecordIdByFieldValue({
             appId: body.onspringUserAppId,
@@ -94,6 +100,34 @@ app.post(
               });
             }),
         ]);
+
+      if (ownerRecordId === 0) {
+        ownerRecordId = await onspring.saveRecord({
+          appId: body.onspringUserAppId,
+          fields: {
+            [body.onspringUserFirstNameFieldId]: serviceNowOwner.name.split(" ")[0],
+            [body.onspringUserLastNameFieldId]: serviceNowOwner.name.split(" ")[1],
+            [body.onspringUserUsernameFieldId]: serviceNowOwner.name.replace(" ", ".").toLowerCase(),
+            [body.onspringUserEmailFieldId]: serviceNowOwner.name.replace(" ", ".").toLowerCase() + "@example.com",
+            [body.onspringUserStatusFieldId]: "0fe6b5fb-7351-46e7-a833-5813f280f710",
+            [body.onspringUserTierFieldId]: "19a961c2-661b-4132-91e5-623120ad59a8",
+          },
+        });
+      }
+
+      if (l3RecordId === 0) {
+        l3RecordId = await onspring.saveRecord({
+          appId: body.onspringUserAppId,
+          fields: {
+            [body.onspringUserFirstNameFieldId]: serviceNowL3.name.split(" ")[0],
+            [body.onspringUserLastNameFieldId]: serviceNowL3.name.split(" ")[1],
+            [body.onspringUserUsernameFieldId]: serviceNowL3.name.replace(" ", ".").toLowerCase(),
+            [body.onspringUserEmailFieldId]: serviceNowL3.name.replace(" ", ".").toLowerCase() + "@example.com",
+            [body.onspringUserStatusFieldId]: "0fe6b5fb-7351-46e7-a833-5813f280f710",
+            [body.onspringUserTierFieldId]: "19a961c2-661b-4132-91e5-623120ad59a8",
+          },
+        });
+      }
 
       const response = {
         appName: serviceNowApp.name,

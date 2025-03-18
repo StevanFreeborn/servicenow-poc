@@ -1,5 +1,10 @@
 export function onspring({ apiKey }: { apiKey: string }) {
   const onspringApiKey = apiKey;
+  const baseUrl = "https://api.onspring.com";
+  const headers = {
+    "x-apikey": onspringApiKey,
+    "Content-Type": "application/json",
+  };
 
   return {
     async getRecordIdByFieldValue({
@@ -12,13 +17,10 @@ export function onspring({ apiKey }: { apiKey: string }) {
       value: any;
     }): Promise<number> {
       const recordResponse = await fetch(
-        "https://api.onspring.com/Records/Query",
+        `${baseUrl}/Records/Query`,
         {
           method: "POST",
-          headers: {
-            "x-apikey": onspringApiKey,
-            "Content-Type": "application/json",
-          },
+          headers: headers,
           body: JSON.stringify({
             appId: appId,
             filter: `${fieldId} eq '${value}'`,
@@ -34,7 +36,29 @@ export function onspring({ apiKey }: { apiKey: string }) {
       }
 
       const recordResponseData = await recordResponse.json();
-      return recordResponseData.items[0].recordId;
+      return recordResponseData?.items[0]?.recordId ?? 0;
+    },
+    async saveRecord({ appId, fields }: { appId: number; fields: object }): Promise<number> {
+      const recordResponse = await fetch(
+        `${baseUrl}/Records`,
+        {
+          method: "PUT",
+          headers: headers,
+          body: JSON.stringify({
+            appId: appId,
+            fields: fields,
+          }),
+        },
+      );
+
+      if (!recordResponse.ok) {
+        throw new Error(
+          `Failed to save record with fields ${JSON.stringify(fields)}: ${recordResponse.statusText}`,
+        );
+      }
+
+      const recordResponseData = await recordResponse.json();
+      return recordResponseData.id;
     },
   };
 }
