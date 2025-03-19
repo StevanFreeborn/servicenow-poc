@@ -35,7 +35,9 @@ const syncRequestSchema = z.object({
   onspringUserEmailFieldId: z.number().min(1),
   onspringUserFullNameFieldId: z.number().min(1),
   onspringUserStatusFieldId: z.number().min(1),
+  onspringUserStatusValue: z.string().min(1),
   onspringUserTierFieldId: z.number().min(1),
+  onspringUserTierValue: z.string().min(1),
   onspringRegTypeAppId: z.number().min(1),
   onspringRegTypeIdFieldId: z.number().min(1),
 });
@@ -129,20 +131,18 @@ app.post(
       return c.json(response);
 
       function newUserRecord({ userName }: { userName: string }) {
+        const [firstName, lastName] = userName.split(" ");
+        const username = userName.replace(" ", ".").toLowerCase();
+
         return {
           appId: body.onspringUserAppId,
           fields: {
-            [body.onspringUserFirstNameFieldId]: userName.split(" ")[0],
-            [body.onspringUserLastNameFieldId]: userName.split(" ")[1],
-            [body.onspringUserUsernameFieldId]: userName
-              .replace(" ", ".")
-              .toLowerCase(),
-            [body.onspringUserEmailFieldId]:
-              userName.replace(" ", ".").toLowerCase() + "@example.com",
-            [body.onspringUserStatusFieldId]:
-              "0fe6b5fb-7351-46e7-a833-5813f280f710",
-            [body.onspringUserTierFieldId]:
-              "19a961c2-661b-4132-91e5-623120ad59a8",
+            [body.onspringUserFirstNameFieldId]: firstName,
+            [body.onspringUserLastNameFieldId]: lastName,
+            [body.onspringUserUsernameFieldId]: username,
+            [body.onspringUserEmailFieldId]: `${username}@example.com`,
+            [body.onspringUserStatusFieldId]: body.onspringUserStatusValue,
+            [body.onspringUserTierFieldId]: body.onspringUserTierValue,
           },
         };
       }
