@@ -75,17 +75,23 @@ app.post(
       const onspring = onx({ apiKey: onspringApiKey });
 
       const serviceNowApp = await serviceNow.getAppByName(body.appName);
-      const [serviceNowOwner, serviceNowL3] = await Promise.all([
+      const [serviceNowAppOwner, serviceNowItOwner, serviceNowL3] = await Promise.all([
+        serviceNow.getUserByLink(serviceNowApp.it_application_owner.link),
         serviceNow.getUserByLink(serviceNowApp.u_primary_it_owner.link),
         serviceNow.getUserByLink(serviceNowApp.u_l3_name.link),
       ]);
 
-      let [ownerRecordId, l3RecordId, ...regulatoryRecordIds] =
+      let [appOwnerRecordId, itOwnerRecordId, l3RecordId, ...regulatoryRecordIds] =
         await Promise.all([
           onspring.getRecordIdByFieldValue({
             appId: body.onspringUserAppId,
             fieldId: body.onspringUserFullNameFieldId,
-            value: serviceNowOwner.name,
+            value: serviceNowAppOwner.name,
+          }),
+          onspring.getRecordIdByFieldValue({
+            appId: body.onspringUserAppId,
+            fieldId: body.onspringUserFullNameFieldId,
+            value: serviceNowItOwner.name,
           }),
           onspring.getRecordIdByFieldValue({
             appId: body.onspringUserAppId,
@@ -103,10 +109,16 @@ app.post(
             }),
         ]);
 
-      if (ownerRecordId === 0) {
-        ownerRecordId = await onspring.saveRecord(
+      if (appOwnerRecordId === 0) {
+        appOwnerRecordId = await onspring.saveRecord(
+          newUserRecord({ userName: serviceNowAppOwner.name }),
+        );
+      }
+
+      if (itOwnerRecordId === 0) {
+        itOwnerRecordId = await onspring.saveRecord(
           newUserRecord({
-            userName: serviceNowOwner.name,
+            userName: serviceNowItOwner.name,
           }),
         );
       }
@@ -123,7 +135,8 @@ app.post(
         description: serviceNowApp.short_description,
         installType: serviceNowApp.install_type,
         cloudModel: serviceNowApp.u_cloud_model,
-        owner: ownerRecordId,
+        appOwner: appOwnerRecordId,
+        itOwner: itOwnerRecordId,
         l3: l3RecordId,
         regulatory: regulatoryRecordIds.join("|"),
       };
